@@ -1,5 +1,6 @@
 import {
   identifyTokenInstruction,
+  TOKEN_PROGRAM_ADDRESS,
   TokenInstruction,
 } from "@solana-program/token";
 import { getBase58Codec } from "@solana/kit";
@@ -8,18 +9,17 @@ import {
   TRawInnerInstruction,
   TRawOuterInstruction,
 } from "./types";
-const SPL_TOKEN_PROGRAM_ID = "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5mW";
 
 const isRawInstructionTransfer = (
   rawIns: TRawInnerInstruction | TRawOuterInstruction,
 ): boolean => {
   if ("parsed" in rawIns) {
     return (
-      rawIns.programId === SPL_TOKEN_PROGRAM_ID &&
+      rawIns.programId === TOKEN_PROGRAM_ADDRESS &&
       (rawIns.parsed.type === "transfer" ||
         rawIns.parsed.type === "transferChecked")
     );
-  } else if (rawIns.programId === SPL_TOKEN_PROGRAM_ID && "data" in rawIns) {
+  } else if (rawIns.programId === TOKEN_PROGRAM_ADDRESS && "data" in rawIns) {
     const ins = identifyTokenInstruction(getBase58Codec().encode(rawIns.data));
     return (
       ins === TokenInstruction.Transfer ||

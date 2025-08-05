@@ -1,9 +1,10 @@
+import { TOKEN_PROGRAM_ADDRESS } from "@solana-program/token";
 import { IDbBalance, TParsedTransaction } from "./types";
 
 export default (tx: TParsedTransaction): readonly IDbBalance[] =>
   tx.meta.postTokenBalances?.reduce((acc: readonly IDbBalance[], raw) => {
-    if (!raw.owner) {
-      return [];
+    if (!raw.owner || raw.programId !== TOKEN_PROGRAM_ADDRESS) {
+      return acc;
     } else {
       return [
         ...acc,
@@ -12,7 +13,7 @@ export default (tx: TParsedTransaction): readonly IDbBalance[] =>
           balance: raw.uiTokenAmount.amount,
           token: raw.mint,
           decimals: raw.uiTokenAmount.decimals,
-          slot: tx.slot,
+          slot: BigInt(tx.slot),
           signature: tx.transaction.signatures[0],
         },
       ];

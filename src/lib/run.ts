@@ -1,7 +1,7 @@
 import * as env from "env-var";
 
 import Client, { CommitmentLevel } from "@triton-one/yellowstone-grpc";
-import startProcessing from "./lib/startProcessing";
+import startProcessing from "./startProcessing";
 
 const parseCommitmentLevel = (
   commitment: string | undefined,

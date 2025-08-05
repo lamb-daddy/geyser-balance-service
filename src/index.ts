@@ -1,6 +1,6 @@
-import run from './run';
+import run from "./lib/run";
 
-run().catch(e => {
-  console.error('Error', e);
+run().catch((e) => {
+  console.error("Error", e);
   process.exit(1);
-})
+});
