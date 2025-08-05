@@ -2,29 +2,19 @@ import {
   identifyTokenInstruction,
   TOKEN_PROGRAM_ADDRESS,
   TokenInstruction,
-} from "@solana-program/token";
-import { getBase58Codec } from "@solana/kit";
-import {
-  TParsedTransaction,
-  TRawInnerInstruction,
-  TRawOuterInstruction,
-} from "./types";
+} from '@solana-program/token';
+import { getBase58Codec } from '@solana/kit';
+import { TParsedTransaction, TRawInnerInstruction, TRawOuterInstruction } from './types';
 
-const isRawInstructionTransfer = (
-  rawIns: TRawInnerInstruction | TRawOuterInstruction,
-): boolean => {
-  if ("parsed" in rawIns) {
+const isRawInstructionTransfer = (rawIns: TRawInnerInstruction | TRawOuterInstruction): boolean => {
+  if ('parsed' in rawIns) {
     return (
       rawIns.programId === TOKEN_PROGRAM_ADDRESS &&
-      (rawIns.parsed.type === "transfer" ||
-        rawIns.parsed.type === "transferChecked")
+      (rawIns.parsed.type === 'transfer' || rawIns.parsed.type === 'transferChecked')
     );
-  } else if (rawIns.programId === TOKEN_PROGRAM_ADDRESS && "data" in rawIns) {
+  } else if (rawIns.programId === TOKEN_PROGRAM_ADDRESS && 'data' in rawIns) {
     const ins = identifyTokenInstruction(getBase58Codec().encode(rawIns.data));
-    return (
-      ins === TokenInstruction.Transfer ||
-      ins === TokenInstruction.TransferChecked
-    );
+    return ins === TokenInstruction.Transfer || ins === TokenInstruction.TransferChecked;
   } else {
     return false;
   }

@@ -1,5 +1,5 @@
-import { TOKEN_PROGRAM_ADDRESS } from "@solana-program/token";
-import { IDbBalance, TParsedTransaction } from "./types";
+import { TOKEN_PROGRAM_ADDRESS } from '@solana-program/token';
+import { IDbBalance, TParsedTransaction } from './types';
 
 export default (tx: TParsedTransaction, slot: bigint): readonly IDbBalance[] =>
   tx.meta.postTokenBalances?.reduce((acc: readonly IDbBalance[], raw) => {
