@@ -5,7 +5,10 @@ import { txWithMixedTransfers } from "./fixtures";
 import { IDbBalance } from "../lib/types";
 
 test("should extract all token balances from a transaction", () => {
-  const balances = extractBalancesFromParsedTx(txWithMixedTransfers);
+  const balances = extractBalancesFromParsedTx(
+    txWithMixedTransfers,
+    txWithMixedTransfers.slot,
+  );
 
   const expectedBalances: IDbBalance[] = [
     {

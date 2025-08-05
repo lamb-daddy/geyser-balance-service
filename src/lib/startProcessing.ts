@@ -3,6 +3,7 @@ import { inspect } from "node:util";
 import Client, {
   CommitmentLevel,
   SubscribeRequest,
+  SubscribeUpdate,
   txEncode,
   txErrDecode,
 } from "@triton-one/yellowstone-grpc";
@@ -13,24 +14,23 @@ export default async (
   client: Client,
   commitment: CommitmentLevel | undefined,
 ) => {
+  console.log("Start processing transactions");
+  let count = 0;
   const stream = await client.subscribe();
   const streamClosed = new Promise<void>((resolve, reject) => {
     stream.on("error", (error) => {
+      console.error("Stream error:", error);
       reject(error);
-      stream.end();
     });
-    stream.on("end", () => {
-      resolve();
-    });
-    stream.on("close", () => {
-      resolve();
-    });
+    stream.on("end", resolve);
+    stream.on("close", resolve);
   });
 
-  stream.on("data", async (data) => {
+  stream.on("data", async (data: SubscribeUpdate) => {
     if (data.transaction) {
       const slot = data.transaction.slot;
       const message = data.transaction.transaction;
+      if (!message || !message.meta) return;
       const tx = txEncode.encode(
         message,
         txEncode.encoding.JsonParsed,
@@ -43,15 +43,30 @@ export default async (
           `TX filters: ${data.filters}, slot#${slot}, err: ${inspect(err)}}`,
         );
       }
-
-      await upsertBalances(extractBalancesFromParsedTx(tx));
+      const balances = extractBalancesFromParsedTx(tx, BigInt(slot));
+      try {
+        await upsertBalances(balances);
+        if (++count % 10000 === 0) {
+          console.log(count, "transactions has been processed");
+        }
+      } catch (e) {
+        console.error("Error upserting balances", balances, e);
+      }
     }
   });
 
   const request: SubscribeRequest = {
     accounts: {},
     slots: {},
-    transactions: {},
+    transactions: {
+      client: {
+        vote: false,
+        failed: false,
+        accountInclude: [],
+        accountExclude: [],
+        accountRequired: [],
+      },
+    },
     transactionsStatus: {},
     entry: {},
     blocks: {},

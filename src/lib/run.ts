@@ -15,6 +15,7 @@ const parseCommitmentLevel = (
 };
 
 export default async () => {
+  console.log("Starting service");
   const endpoint = env.get("GEYSER_ENDPOINT").required().asString();
   const xToken = env.get("GEYSER_XTOKEN").default("").asString();
   const commitment = parseCommitmentLevel(env.get("COMMITMENT").asString());

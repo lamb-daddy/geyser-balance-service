@@ -1,21 +1,34 @@
+import * as env from "env-var";
 import pgp from "pg-promise";
 import path from "path";
 import { IDbBalance } from "./types";
 
-const db = pgp()({
-  connectionString: process.env.DATABASE_URL,
+const initOptions = env.get("DEBUG_DB").default("false").asBool()
+  ? {
+      query(e: pgp.IEventContext) {
+        console.log("QUERY:", e.query);
+      },
+      error(err: any, e: pgp.IEventContext) {
+        console.error("DB ERROR:", err);
+        console.error("QUERY CONTEXT:", e.query);
+      },
+    }
+  : {};
+
+const db = pgp(initOptions)({
+  connectionString: env.get("DATABASE_URL").required().asString(),
 });
 
 const upsertBalanceSql = new pgp.QueryFile(
-  path.join(__dirname, "../sql/queries/upsertBalance.sql"),
+  path.join(process.cwd(), "src/sql/queries/upsertBalance.sql"),
 );
 
 const upsertBalancesSql = new pgp.QueryFile(
-  path.join(__dirname, "../sql/queries/upsertBalances.sql"),
+  path.join(process.cwd(), "src/sql/queries/upsertBalances.sql"),
 );
 
 const getBalanceSql = new pgp.QueryFile(
-  path.join(__dirname, "../sql/queries/getBalance.sql"),
+  path.join(process.cwd(), "src/sql/queries/getBalance.sql"),
 );
 
 async function upsertBalance(data: IDbBalance): Promise<void> {
@@ -25,7 +38,7 @@ async function upsertBalance(data: IDbBalance): Promise<void> {
       token: data.token,
       balance: data.balance,
       decimals: data.decimals,
-      slot: data.slot,
+      slot: String(data.slot),
       signature: data.signature,
     });
   } catch (error) {
@@ -35,9 +48,14 @@ async function upsertBalance(data: IDbBalance): Promise<void> {
 }
 
 async function upsertBalances(data: readonly IDbBalance[]): Promise<void> {
+  if (data.length === 0) {
+    return;
+  }
   try {
     await db.none(upsertBalancesSql, {
-      balances: JSON.stringify(data),
+      balances: JSON.stringify(
+        data.map((item) => ({ ...item, slot: String(item.slot) })),
+      ),
     });
   } catch (error) {
     console.error("DB error while upserting balances occured:", error);

@@ -6,10 +6,13 @@ services:
     ports:
       - "3000:3000"
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
     environment:
       - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/postgres
-      
+      - GEYSER_ENDPOINT=${GEYSER_ENDPOINT}
+      - NODE_OPTIONS="--enable-source-maps"
+
   postgres:
     image: postgres:13
     environment:
